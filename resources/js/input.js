@@ -1,35 +1,42 @@
 $(document).on('ajaxComplete ready', function () {
-
     // Initialize file pickers
-    $('[data-provides="anomaly.field_type.file"]:not([data-initialized])').each(function () {
+    $('[data-provides="anomaly.field_type.file"]:not([data-initialized])')
+        .each(function () {
+            var $this = $(this);
 
-        $(this).attr('data-initialized', '');
+            $this.attr('data-initialized', '');
 
-        var input = $(this);
-        var field = input.data('field_name');
-        var wrapper = input.closest('.form-group');
-        var modal = $('#' + field + '-modal');
+            var field = $this.data('field_name');
+            var $wrapper = $this.closest('.form-group');
+            var $modal = $('#' + field + '-modal');
 
-        modal.on('click', '[data-file]', function (e) {
+            $modal.on('click', '[data-file]', function (e) {
+                e.preventDefault();
 
-            e.preventDefault();
+                $modal.trigger('loading');
 
-            modal.trigger('loading');
+                $wrapper
+                    .find('.selected')
+                    .load(
+                        REQUEST_ROOT_PATH +
+                            '/streams/file-field_type/selected?uploaded=' +
+                            $(this).data('file'),
+                        function () {
+                            $modal.modal('hide');
+                        }
+                    );
 
-            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/streams/file-field_type/selected?uploaded=' + $(this).data('file'), function () {
-                modal.modal('hide');
+                $this.val($(this).data('file'));
             });
 
-            input.val($(this).data('file'));
+            $wrapper.on('click', '[data-dismiss="file"]', function (e) {
+                e.preventDefault();
+
+                $this.val('');
+
+                $wrapper
+                    .find('.selected')
+                    .load(REQUEST_ROOT_PATH + '/streams/file-field_type/selected');
+            });
         });
-
-        $(wrapper).on('click', '[data-dismiss="file"]', function (e) {
-
-            e.preventDefault();
-
-            input.val('');
-
-            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/streams/file-field_type/selected');
-        });
-    });
 });
