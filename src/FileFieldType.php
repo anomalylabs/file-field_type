@@ -5,6 +5,7 @@ use Anomaly\FilesModule\File\Contract\FileInterface;
 use Anomaly\Streams\Platform\Addon\FieldType\FieldType;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Crypt;
 
 /**
  * Class FileFieldType
@@ -116,11 +117,7 @@ class FileFieldType extends FieldType
      */
     public function configKey()
     {
-        $key = md5(json_encode($this->getConfig()));
-
-        $this->cache->put('file-field_type::' . $key, $this->getConfig(), 30);
-
-        return $key;
+        return Crypt::encrypt($this->getConfig());
     }
 
     /**
