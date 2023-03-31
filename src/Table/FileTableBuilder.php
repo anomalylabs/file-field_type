@@ -108,7 +108,7 @@ class FileTableBuilder extends TableBuilder
                                 return $folder;
                             }
 
-                            if ($folder = $this->dispatch(new GetFolder($folder))) {
+                            if ($folder = $this->dispatchSync(new GetFolder($folder))) {
                                 return $folder->getId();
                             }
 

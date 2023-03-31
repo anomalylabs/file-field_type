@@ -35,7 +35,7 @@ class UploadController extends AdminController
     public function index(UploadTableBuilder $table, $folder, $key)
     {
         /* @var FolderInterface $folder */
-        $folder = dispatch_now(new GetFolder($folder));
+        $folder = dispatch_sync(new GetFolder($folder));
 
         $config = Cache::get($key);
 

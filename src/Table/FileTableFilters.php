@@ -38,7 +38,7 @@ class FileTableFilters
         foreach (Arr::get($config, 'folders', []) as $identifier) {
 
             /* @var FolderInterface $folder */
-            if ($folder = $this->dispatch(new GetFolder($identifier))) {
+            if ($folder = $this->dispatchSync(new GetFolder($identifier))) {
                 $allowed[$folder->getId()] = $folder->getName();
             }
         }
