@@ -5,7 +5,6 @@ namespace Anomaly\FileFieldType\Http\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Anomaly\FilesModule\File\FileUploader;
-use Illuminate\Foundation\Bus\DispatchesJobs;
 use Anomaly\FileFieldType\Table\FileTableBuilder;
 use Anomaly\FilesModule\Folder\Command\GetFolder;
 use Anomaly\FileFieldType\Table\UploadTableBuilder;
@@ -21,9 +20,6 @@ use Anomaly\FilesModule\Folder\Contract\FolderRepositoryInterface;
  */
 class UploadController extends AdminController
 {
-
-    use DispatchesJobs;
-
     /**
      * Return the uploader.
      *

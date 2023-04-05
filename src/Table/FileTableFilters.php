@@ -3,7 +3,6 @@
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Foundation\Bus\DispatchesJobs;
 use Anomaly\FilesModule\Folder\Command\GetFolder;
 use Anomaly\FilesModule\Folder\Contract\FolderRepositoryInterface;
 
@@ -16,9 +15,6 @@ use Anomaly\FilesModule\Folder\Contract\FolderRepositoryInterface;
  */
 class FileTableFilters
 {
-
-    use DispatchesJobs;
-
     /**
      * Handle the filters.
      *
@@ -38,7 +34,7 @@ class FileTableFilters
         foreach (Arr::get($config, 'folders', []) as $identifier) {
 
             /* @var FolderInterface $folder */
-            if ($folder = $this->dispatchSync(new GetFolder($identifier))) {
+            if ($folder = dispatch_sync(new GetFolder($identifier))) {
                 $allowed[$folder->getId()] = $folder->getName();
             }
         }
