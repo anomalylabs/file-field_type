@@ -5,8 +5,8 @@ use Anomaly\FileFieldType\FileFieldTypeParser;
 use Anomaly\FilesModule\Disk\Contract\DiskRepositoryInterface;
 use Anomaly\FilesModule\File\Contract\FileInterface;
 use Anomaly\FilesModule\File\Contract\FileRepositoryInterface;
+use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
-use League\Flysystem\MountManager;
 
 /**
  * Class PerformUpload
@@ -40,22 +40,23 @@ class PerformUpload
      *
      * @param DiskRepositoryInterface $disks
      * @param FileRepositoryInterface $files
-     * @param FileFieldTypeParser     $parser
-     * @param Request                 $request
-     * @param MountManager            $manager
+     * @param FileFieldTypeParser $parser
+     * @param Request $request
+     * @param FilesystemManager $manager
      *
      * @return null|bool|FileInterface
      */
     public function handle(
         DiskRepositoryInterface $disks,
         FileRepositoryInterface $files,
-        FileFieldTypeParser $parser,
-        Request $request,
-        MountManager $manager
-    ) {
+        FileFieldTypeParser     $parser,
+        Request                 $request,
+        FilesystemManager       $manager
+    )
+    {
         $path = trim(array_get($this->fieldType->getConfig(), 'path'), './');
 
-        $file  = $request->file($this->fieldType->getInputName());
+        $file = $request->file($this->fieldType->getInputName());
         $value = $request->get($this->fieldType->getInputName() . '_id');
 
         /*
@@ -83,7 +84,6 @@ class PerformUpload
         $path = $parser->parse($path, $this->fieldType);
         $path = (!empty($path) ? $path . '/' : null) . $file->getClientOriginalName();
 
-        //return $manager->putStream($disk->path($path), fopen($file->getRealPath(), 'r+'));
-         return $manager->putStream($disk->getSlug() . '://' . $path, fopen($file->getRealPath(), 'r+'));
+        return $manager->disk($disk->getSlug())->writeStream($path, fopen($file->getRealPath(), 'r+'));
     }
 }
