@@ -7,6 +7,7 @@ $(document).on('ajaxComplete ready', function () {
 
         var input = $(this);
         var field = input.data('field_name');
+        var key = input.data('config_key');
         var wrapper = input.closest('.form-group');
         var modal = $('#' + field + '-modal');
 
@@ -16,7 +17,7 @@ $(document).on('ajaxComplete ready', function () {
 
             modal.trigger('loading');
 
-            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/streams/file-field_type/selected?uploaded=' + $(this).data('file'), function () {
+            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/admin/file-field_type/selected/' + key + '?uploaded=' + $(this).data('file'), function () {
                 modal.modal('hide');
             });
 
@@ -29,7 +30,7 @@ $(document).on('ajaxComplete ready', function () {
 
             input.val('');
 
-            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/streams/file-field_type/selected');
+            wrapper.find('.selected').load(REQUEST_ROOT_PATH + '/admin/file-field_type/selected/' + key);
         });
     });
 });

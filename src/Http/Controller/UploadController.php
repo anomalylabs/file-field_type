@@ -5,9 +5,10 @@ namespace Anomaly\FileFieldType\Http\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Anomaly\FilesModule\File\FileUploader;
-use Anomaly\FileFieldType\Table\FileTableBuilder;
-use Anomaly\FilesModule\Folder\Command\GetFolder;
+use Anomaly\FileFieldType\Support\AllowedFolders;
 use Anomaly\FileFieldType\Table\UploadTableBuilder;
+use Anomaly\FilesModule\Folder\Command\GetFolder;
+use Anomaly\Streams\Platform\Support\Authorizer;
 use Anomaly\Streams\Platform\Http\Controller\AdminController;
 use Anomaly\FilesModule\Folder\Contract\FolderRepositoryInterface;
 
@@ -20,6 +21,7 @@ use Anomaly\FilesModule\Folder\Contract\FolderRepositoryInterface;
  */
 class UploadController extends AdminController
 {
+
     /**
      * Return the uploader.
      *
@@ -28,12 +30,18 @@ class UploadController extends AdminController
      * @param $key
      * @return \Illuminate\Contracts\View\View|mixed
      */
-    public function index(UploadTableBuilder $table, $folder, $key)
+    public function index(UploadTableBuilder $table, Authorizer $authorizer, $folder, $key)
     {
+        $this->authorizeWrite($authorizer);
+
+        $config = $this->config($key);
+
         /* @var FolderInterface $folder */
         $folder = dispatch_sync(new GetFolder($folder));
 
-        $config = Cache::get($key);
+        if (!$folder || !AllowedFolders::permits($config, $folder->getId())) {
+            abort(404);
+        }
 
         $allowed = array_intersect(
             Arr::get($config, 'allowed_types', []),
@@ -44,9 +52,10 @@ class UploadController extends AdminController
             'anomaly.field_type.file::upload/index',
             [
                 'allowed' => $allowed ?: $folder->getAllowedTypes(),
-                'table'   => $table->make()->getTable(),
+                'table'   => $table->setAllowedFolders(AllowedFolders::ids($config))->make()->getTable(),
                 'folder'  => $folder,
                 'config'  => $config,
+                'key'     => $key,
             ]
         );
     }
@@ -56,27 +65,83 @@ class UploadController extends AdminController
      *
      * @param  FileUploader $uploader
      * @param  FolderRepositoryInterface $folders
+     * @param  Authorizer $authorizer
+     * @param  $key
      * @return \Illuminate\Http\JsonResponse
      */
-    public function upload(FileUploader $uploader, FolderRepositoryInterface $folders)
-    {
-        if ($file = $uploader->upload($this->request->file('upload'), $folders->find($this->request->get('folder')))) {
-            return $this->response->json($file->getAttributes());
+    public function upload(
+        FileUploader $uploader,
+        FolderRepositoryInterface $folders,
+        Authorizer $authorizer,
+        $key
+    ) {
+        $this->authorizeWrite($authorizer);
+
+        $config = $this->config($key);
+
+        if (!$file = $this->request->file('upload')) {
+            return $this->response->json(['message' => 'No file was uploaded.'], 422);
         }
 
-        return $this->response->json(['message' => 'There was a problem uploading the file.'], 500);
+        if (!$folder = $folders->find($this->request->get('folder'))) {
+            return $this->response->json(['message' => 'The folder could not be found.'], 404);
+        }
+
+        if (!AllowedFolders::permits($config, $folder->getId())) {
+            return $this->response->json(['message' => 'That folder is not allowed for this field.'], 403);
+        }
+
+        try {
+            $entry = $uploader->upload($file, $folder);
+        } catch (\Exception $e) {
+            return $this->response->json(['message' => $e->getMessage()], 422);
+        }
+
+        return $this->response->json($entry->getAttributes());
     }
 
     /**
      * Return the recently uploaded files.
      *
-     * @param  FileTableBuilder $table
+     * @param  UploadTableBuilder $table
+     * @param  $key
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function recent(UploadTableBuilder $table)
+    public function recent(UploadTableBuilder $table, Authorizer $authorizer, $key)
     {
-        return $table->setUploaded(explode(',', $this->request->get('uploaded')))
+        $this->authorizeWrite($authorizer);
+
+        return $table
+            ->setAllowedFolders(AllowedFolders::ids($this->config($key)))
+            ->setUploaded(explode(',', $this->request->get('uploaded')))
             ->make()
             ->getTableContent();
+    }
+
+    /**
+     * Refuse a caller who may not write files.
+     *
+     * @param Authorizer $authorizer
+     */
+    protected function authorizeWrite(Authorizer $authorizer)
+    {
+        if (!$authorizer->authorize('anomaly.module.files::files.write')) {
+            abort(403);
+        }
+    }
+
+    /**
+     * Return the configuration the key stands for.
+     *
+     * @param  string $key
+     * @return array
+     */
+    protected function config($key)
+    {
+        if (!$config = Cache::get($key)) {
+            abort(404);
+        }
+
+        return (array)$config;
     }
 }

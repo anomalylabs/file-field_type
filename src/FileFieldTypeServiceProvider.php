@@ -27,13 +27,34 @@ class FileFieldTypeServiceProvider extends AddonServiceProvider
      * @var array
      */
     protected $routes = [
-        'streams/file-field_type/index/{key}'           => 'Anomaly\FileFieldType\Http\Controller\FilesController@index',
-        'streams/file-field_type/choose/{key}'          => 'Anomaly\FileFieldType\Http\Controller\FilesController@choose',
-        'streams/file-field_type/selected'              => 'Anomaly\FileFieldType\Http\Controller\FilesController@selected',
-        'streams/file-field_type/exists/{folder}'       => 'Anomaly\FileFieldType\Http\Controller\FilesController@exists',
-        'streams/file-field_type/upload/{folder}/{key}' => 'Anomaly\FileFieldType\Http\Controller\UploadController@index',
-        'streams/file-field_type/handle'                => 'Anomaly\FileFieldType\Http\Controller\UploadController@upload',
-        'streams/file-field_type/recent'                => 'Anomaly\FileFieldType\Http\Controller\UploadController@recent',
+        'admin/file-field_type/index/{key}'           => [
+            'verb' => 'get',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\FilesController@index',
+        ],
+        'admin/file-field_type/choose/{key}'          => [
+            'verb' => 'get',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\FilesController@choose',
+        ],
+        'admin/file-field_type/selected/{key}'        => [
+            'verb' => 'get',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\FilesController@selected',
+        ],
+        'admin/file-field_type/exists/{folder}/{key}' => [
+            'verb' => 'post',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\FilesController@exists',
+        ],
+        'admin/file-field_type/upload/{folder}/{key}' => [
+            'verb' => 'get',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\UploadController@index',
+        ],
+        'admin/file-field_type/handle/{key}'          => [
+            'verb' => 'post',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\UploadController@upload',
+        ],
+        'admin/file-field_type/recent/{key}'          => [
+            'verb' => 'get',
+            'uses' => 'Anomaly\FileFieldType\Http\Controller\UploadController@recent',
+        ],
     ];
 
 }
