@@ -1,7 +1,7 @@
 <?php namespace Anomaly\FileFieldType\Http\Controller;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
+use Anomaly\FileFieldType\Support\ConfigCache;
 use Anomaly\FileFieldType\Support\AllowedFolders;
 use Anomaly\FileFieldType\Table\FileTableBuilder;
 use Anomaly\FilesModule\Folder\Command\GetFolder;
@@ -151,7 +151,7 @@ class FilesController extends AdminController
      */
     protected function config($key)
     {
-        if (!$config = Cache::get($key)) {
+        if (!$config = ConfigCache::get($key)) {
             abort(404);
         }
 
